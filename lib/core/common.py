@@ -127,11 +127,11 @@ def get_process_start_time(pid):
             if pid == info.split(' ')[0].strip():
                 user = info.split(' ', 2)[1].strip()
                 sstime = info.split(' ', 2)[2].strip()
-                stime = os.popen("date -d " + sstime + " '+%Y-%m-%d %H:%M:%S' 2>/dev/null").read().splitlines()
-                return user, stime[0]
-        return user, stime
+                stime = os.popen("date -d '" + sstime + "' '+%Y-%m-%d %H:%M:%S' 2>/dev/null").read().splitlines()
+                return stime[0], user
+        return stime, user
     except:
-        return user, stime
+        return stime, user
 
 
 # 检测风险结果，进行全局变量结果录入
@@ -240,11 +240,10 @@ def file_write(content):
 def check_shell(content):
     try:
         # 反弹shell类
-        if (('bash' in content) and (
-                ('/dev/tcp/' in content) or ('telnet ' in content) or ('nc ' in content) or (
-                ('exec ' in content) and ('socket' in content)) or ('curl ' in content) or (
-                        'wget ' in content) or (
-                        'lynx ' in content))) or (".decode('base64')" in content):
+        if (('bash' in content) and (('/dev/tcp/' in content) or ('telnet ' in content) or ('nc ' in content) or (
+                ('exec ' in content) and ('socket' in content)) or ('curl ' in content) or ('wget ' in content) or (
+                                             'lynx ' in content) or ('bash -i' in content))) or (
+                ".decode('base64')" in content) or ("exec(base64.b64decode" in content):
             return content
         elif ('/dev/tcp/' in content) and (('exec ' in content) or ('ksh -c' in content)):
             return content

@@ -32,6 +32,21 @@ class User_Analysis:
         except:
             return suspicious, malice
 
+    # 检测特权组用户
+    def check_gid(self):
+        suspicious, malice = False, False
+        try:
+            shell_process = os.popen("cat /etc/passwd | grep '/bin/bash' | awk -F: '$4==0 {print $1}' 2>/dev/null").read().splitlines()
+            for user in shell_process:
+                if user.replace("\n", "") != 'root':
+                    malice_result(self.name, u'特权组账户安全扫描', '/etc/passwd', '',
+                                  u'存在特权组用户%s' % user.replace("\n", ""),
+                                  u'[1]cat /etc/passwd', u'可疑', programme=u'vi /etc/passwd #删除用户root特权组或删除用户')
+                    suspicious = False
+            return suspicious, malice
+        except:
+            return suspicious, malice
+
     # 检测空口令账户
     def check_empty(self):
         suspicious, malice = False, False
@@ -107,11 +122,11 @@ class User_Analysis:
                 if not os.path.exists(file): continue
                 shell_process = os.popen("ls -l " + file + " 2>/dev/null |awk '{print $1}'").read().splitlines()
                 if len(shell_process) != 1: continue
-                if file == '/etc/passwd' and shell_process[0] != '-rw-r--r--':
+                if file == '/etc/passwd' and shell_process[0].strip('.') != '-rw-r--r--':
                     malice_result(self.name, u'账户密码文件扫描', file, '',
                                   u'passwd文件权限变更，不为-rw-r--r--', u'ls -l /etc/passwd', u'可疑')
                     suspicious = True
-                elif file == '/etc/shadow' and shell_process[0] != '----------':
+                elif file == '/etc/shadow' and shell_process[0].strip('.') != '----------':
                     malice_result(self.name, u'账户密码文件扫描', file, '',
                                   u'shadow文件权限变更，不为----------', u'ls -l /etc/shadow', u'可疑')
                     suspicious = True
@@ -127,19 +142,23 @@ class User_Analysis:
         suspicious, malice = self.check_user()
         result_output_tag(suspicious, malice)
 
-        string_output(u' [2]空口令账户安全扫描')
+        string_output(u' [2]特权组账户安全扫描')
+        suspicious, malice = self.check_gid()
+        result_output_tag(suspicious, malice)
+
+        string_output(u' [3]空口令账户安全扫描')
         suspicious, malice = self.check_empty()
         result_output_tag(suspicious, malice)
 
-        string_output(u' [3]sudoers权限安全扫描')
+        string_output(u' [4]sudoers权限安全扫描')
         suspicious, malice = self.check_sudo()
         result_output_tag(suspicious, malice)
 
-        string_output(u' [4]账户免密码证书安全扫描')
+        string_output(u' [5]账户免密码证书安全扫描')
         suspicious, malice = self.check_authorized_keys()
         result_output_tag(suspicious, malice)
 
-        string_output(u' [5]账户密码文件扫描')
+        string_output(u' [6]账户密码文件扫描')
         suspicious, malice = self.passwd_file_analysis()
         result_output_tag(suspicious, malice)
 

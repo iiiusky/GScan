@@ -84,9 +84,15 @@ class SSH_Analysis:
 
         for i in f:
             if (username_error in i) and ('from' in i) and ('sshd' in i):
-                failed_ip.append(i.split(': ')[1].split()[4])
+                try:
+                    failed_ip.append(i.split(': ')[1].split()[4])
+                except:
+                    continue
             elif (username_correct in i) and ('from' in i) and ('sshd' in i):
-                failed_ip.append(i.split(': ')[1].rsplit()[-4])
+                try:
+                    failed_ip.append(i.split(': ')[1].rsplit()[-4])
+                except:
+                    continue
             elif username_password_correct in i and ('sshd' in i):
                 ip = i.split(': ')[1].split()[5]
                 user = i.split(': ')[1].split()[3]
@@ -119,7 +125,7 @@ if __name__ == '__main__':
     parser.add_option("-d", "--dir", dest="dir", help=u"target dir，demo: -d /var/log/")
     parser.add_option("-f", "--file", dest="file", help=u"target file，demo: -p /var/log/secure")
     options, _ = parser.parse_args()
-    options.file = 'secure'
+    #options.file = 'secure'
     if options.dir or options.file:
         print(u'存在爆破且成功的信息：')
         print(SSH_Analysis(log=options.file, log_dir=options.dir).correct_baopo_infos)
